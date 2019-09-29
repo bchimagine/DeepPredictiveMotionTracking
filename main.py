@@ -89,8 +89,14 @@ if __name__ == '__main__':
     with open(config_path) as f:
         config = json.load(f)
 
-    data_factory = DataFactory(config)
     model = get_model(config)
+
+    # To handle case for evaluation, in case user forgot to specify type of model
+    if len(model.output_names) > 4:
+        config['network']['single_head'] = False
+    else:
+        config['network']['single_head'] = True
+    data_factory = DataFactory(config)
 
     if config['evaluation']['pretrained_model_path']:
         loss = evaluate_model(model, data_factory)
