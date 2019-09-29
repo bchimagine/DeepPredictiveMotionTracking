@@ -1,0 +1,29 @@
+{
+  "description": "Our full model trained on masked data",
+  "save_path": "./experiments",
+  "data": {
+    "train_data_path": "../data/deepPMT/train",
+    "test_data_path": "../data/deepPMT/test",
+    "mask": true,
+    "height": 128,
+    "width": 128,
+    "channels": 1,
+    "estimation_timestep_limit": 10,
+    "prediction_timestep_limit": 10,
+    "initial_slice_index": 55
+  },
+  "network": {
+    "type": "our_model",
+    "single_head": true,
+    "hidden_units": 512
+  },
+  "training": {
+    "batch_size": 32,
+    "learning_rate": [0.001, 0.0001],
+    "epoch_steps": 6,
+    "intra_epoch_steps": 20
+  },
+  "evaluation": {
+    "pretrained_model_path": "./models/our_model"
+  }
+}
