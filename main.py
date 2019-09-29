@@ -4,25 +4,31 @@ import json
 from shutil import copyfile
 from datetime import datetime
 from keras.optimizers import RMSprop
+from keras.models import load_model
 
 from data.data_factory import DataFactory
 from models.direct_lstm import build_direct_lstm_model
 from models.our_model import build_our_model
 from models.resnet18 import build_resnet18_model
 from models.vgg16 import build_vgg16_model
+from utils.activations import pitanh, PReLU
 
 
 def get_model(config):
     model_type = config['network']['type'].lower()
 
-    if model_type == 'our_model':
-        return build_our_model(config)
-    elif model_type == 'direct_lstm':
-        return build_direct_lstm_model(config)
-    elif model_type == 'resnet18':
-        return build_resnet18_model(config)
-    elif model_type == 'vgg16':
-        return build_vgg16_model(config)
+    if os.path.exists():
+        return load_model(config['evaluation']['pretrained_model_path'],
+                          custom_objects={'PReLU': PReLU, 'Pitanh': pitanh})
+    else:
+        if model_type == 'our_model':
+            return build_our_model(config)
+        elif model_type == 'direct_lstm':
+            return build_direct_lstm_model(config)
+        elif model_type == 'resnet18':
+            return build_resnet18_model(config)
+        elif model_type == 'vgg16':
+            return build_vgg16_model(config)
 
 
 def train_model(model, data_factory):
@@ -74,18 +80,24 @@ def export_model_results(model, loss, config_path):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Process some integers.')
-    parser.add_argument('config', type=str, help='path to experiment config file')
+    parser.add_argument('config', type=str, help='path to experiment config file', default=None)
+    parser.add_argument('pretrained_model_path', type=str, help='path to pretrained model HDF5 file', default=None)
 
     args = parser.parse_args()
-    config_path = args[0]
+    config_path = args['config']
+    pretrained_model_path = args['pretrained_model_path']
+
     with open(config_path) as f:
         config = json.load(f)
 
     data_factory = DataFactory(config)
-
     model = get_model(config)
-    model = train_model(model, data_factory)
 
-    loss = evaluate_model(model, data_factory)
+    if config['evaluation']['pretrained_model_path']:
+        loss = evaluate_model(model, data_factory)
+    else:
+        model = train_model(model, data_factory)
 
-    export_model_results(model, loss, config_path)
+        loss = evaluate_model(model, data_factory)
+        export_model_results(model, loss, config_path)
+
