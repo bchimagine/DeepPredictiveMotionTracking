@@ -12,9 +12,16 @@ Code for [Deep Predictive Motion Tracking in Magnetic Resonance Imaging: Applica
 ### Getting started
 1. The `main.py` script runs all training and evaluation OR just evaluation using a pretrained model.
 2. Simply configure the `sample.json` in experiments directory and pass it as an argument to he main script
-> python main.py --config ./experiments/sample_experiment.json 
+```python
+>>> python main.py --config ./experiments/sample_experiment.json 
+```
 3. If step 2 is training then once the model is trained, the results of held out test set, a copy of experiments
 .json and model itself will be persisted to given directory.
 4. An example of how to configure experiments is put in ./experiments directory.
-5. If a pretrained model path is provided then only evaluation will be done otherwise training.
+5. If a pretrained model path is provided then only evaluation will be done by loading the pretrained model otherwise
+ training from scratch will be performed.
+
+
+> To download pretrained models please visit this [gdrive link](https://drive.google
+.com/drive/folders/1CCKWFLDZ-BoqmThGCpapcw7jBJ_a83cR?usp=sharing) and place them in preferably `./models` directory
 
