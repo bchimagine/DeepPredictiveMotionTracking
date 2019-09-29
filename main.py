@@ -17,7 +17,7 @@ from utils.activations import pitanh, PReLU
 def get_model(config):
     model_type = config['network']['type'].lower()
 
-    if os.path.exists():
+    if os.path.exists(config['evaluation']['pretrained_model_path']):
         return load_model(config['evaluation']['pretrained_model_path'],
                           custom_objects={'PReLU': PReLU, 'Pitanh': pitanh})
     else:
@@ -83,8 +83,7 @@ if __name__ == '__main__':
     parser.add_argument('config', type=str, help='path to experiment config file')
 
     args = parser.parse_args()
-    config_path = args['config']
-    pretrained_model_path = args['pretrained_model_path']
+    config_path = args.config
 
     with open(config_path) as f:
         config = json.load(f)
@@ -99,6 +98,7 @@ if __name__ == '__main__':
     data_factory = DataFactory(config)
 
     if config['evaluation']['pretrained_model_path']:
+        model.compile(loss='mse', optimizer='rmsprop')
         loss = evaluate_model(model, data_factory)
     else:
         model = train_model(model, data_factory)

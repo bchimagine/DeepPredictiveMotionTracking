@@ -37,7 +37,7 @@ def build_our_model(config):
 
     x = TimeDistributed(Flatten())(x)
 
-    encoder_rnn = CuDNNLSTM(config['hidden_units'], return_sequences=True, return_state=True,
+    encoder_rnn = CuDNNLSTM(config['network']['hidden_units'], return_sequences=True, return_state=True,
                             name="encoder_rnn")
     encoder_outputs_states = encoder_rnn(x)
     encoder_outputs, encoder_states = encoder_outputs_states[0], encoder_outputs_states[1:]  # [state_h, state_c]
@@ -47,14 +47,15 @@ def build_our_model(config):
 
     # DECODER
     decoder_input = Input(shape=(None, NB_ANGLES + NB_SLICE), name="decoder_input")
-    decoder_rnn = CuDNNLSTM(config['hidden_units'], return_sequences=True, return_state=True, name="decoder_rnn")
+    decoder_rnn = CuDNNLSTM(config['network']['hidden_units'], return_sequences=True,
+                            return_state=True, name="decoder_rnn")
     decoder_outputs_states = decoder_rnn(decoder_input, initial_state=encoder_states)
     decoder_outputs, decoder_states = decoder_outputs_states[0], decoder_outputs_states[1:]  # [state_h, state_c]
 
     prediction_offset_z = TimeDistributed(Dense(NB_SLICE, activation='relu'),
                                           name="prediction_offset_z")(decoder_outputs)
 
-    if config['single_head']:
+    if config['network']['single_head']:
         estimator_rotation = TimeDistributed(Dense(NB_ANGLES, activation=pitanh),
                                              name="estimation_rotation")(encoder_outputs)
         prediction_rotation = TimeDistributed(Dense(NB_ANGLES, activation=pitanh),
@@ -65,20 +66,20 @@ def build_our_model(config):
                                                                prediction_rotation,
                                                                ])
     else:
-        estimation_rotation_xy = TimeDistributed(Dense(config['hidden_units'], activation='tanh'),
+        estimation_rotation_xy = TimeDistributed(Dense(config['network']['hidden_units'], activation='tanh'),
                                                  name="estimation_rotation_xy_fc")(encoder_outputs)
         estimation_rotation_xy = TimeDistributed(Dense(NB_SINGLE_ANGLE + NB_SINGLE_ANGLE, activation=pitanh),
                                                  name="estimation_rotation_xy")(estimation_rotation_xy)
-        estimation_rotation_z = TimeDistributed(Dense(config['hidden_units'], activation='tanh'),
+        estimation_rotation_z = TimeDistributed(Dense(config['network']['hidden_units'], activation='tanh'),
                                                 name="estimation_rotation_z_fc")(encoder_outputs)
         estimation_rotation_z = TimeDistributed(Dense(NB_SINGLE_ANGLE, activation=pitanh),
                                                 name="estimation_rotation_z")(estimation_rotation_z)
 
-        prediction_rotation_xy = TimeDistributed(Dense(config['hidden_units'], activation='tanh'),
+        prediction_rotation_xy = TimeDistributed(Dense(config['network']['hidden_units'], activation='tanh'),
                                                  name="prediction_rotation_xy_fc")(decoder_outputs)
         prediction_rotation_xy = TimeDistributed(Dense(NB_SINGLE_ANGLE + NB_SINGLE_ANGLE, activation=pitanh),
                                                  name="prediction_rotation_xy")(prediction_rotation_xy)
-        prediction_rotation_z = TimeDistributed(Dense(config['hidden_units'], activation='tanh'),
+        prediction_rotation_z = TimeDistributed(Dense(config['network']['hidden_units'], activation='tanh'),
                                                 name="prediction_rotation_z_fc")(decoder_outputs)
         prediction_rotation_z = TimeDistributed(Dense(NB_SINGLE_ANGLE, activation=pitanh),
                                                 name="prediction_rotation_z")(prediction_rotation_z)
@@ -97,7 +98,8 @@ def build_our_model(config):
     # encoder_predict_model = Model(encoder_input, encoder_states)
     # # encoder_predict_model.summary()
 
-    # decoder_states_inputs = [Input(shape=(config['hidden_units'],)), Input(shape=(config['hidden_units'],))]
+    # decoder_states_inputs = [Input(shape=(config['network']['hidden_units'],)), Input(shape=(config['network']
+    # ['hidden_units'],))]
     # decoder_outputs_and_states = decoder_rnn(decoder_input, initial_state=decoder_states_inputs)
     # decoder_outputs_pred, decoder_states_pred = decoder_outputs_and_states[0], decoder_outputs_and_states[1:] # [state_h, state_c]
     # decoder_outputs_pred = predictor(decoder_outputs_pred)

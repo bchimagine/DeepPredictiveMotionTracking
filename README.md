@@ -10,6 +10,7 @@ Code for [Deep Predictive Motion Tracking in Magnetic Resonance Imaging: Applica
 ![results](./imgs/est_pred_imposed_slices_test29_msk5.png)
 
 ### Getting started
+0. Install all the dependencies in python >v3.6 using `python setup.py install`
 1. The `main.py` script runs all training and evaluation OR just evaluation using a pretrained model.
 2. Simply configure the `sample_experiment.json` in `./experiments` directory and pass it as an argument to the main 
 script

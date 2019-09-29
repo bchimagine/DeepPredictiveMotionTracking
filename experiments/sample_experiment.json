@@ -10,7 +10,8 @@
     "channels": 1,
     "estimation_timestep_limit": 10,
     "prediction_timestep_limit": 10,
-    "initial_slice_index": 55
+    "initial_slice_index": 55,
+    "inter_slice_spacing": 5
   },
   "network": {
     "type": "our_model",

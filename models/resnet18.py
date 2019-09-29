@@ -1,5 +1,3 @@
-from __future__ import division
-
 import six
 from keras import backend as K
 from keras.layers import (

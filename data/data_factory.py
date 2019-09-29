@@ -35,6 +35,11 @@ class DataFactory:
         else:
             self.initial_slice_index = 55
 
+        if not config["data"]["initial_slice_index"]:
+            self.inter_slice_spacing = config["data"]["inter_slice_spacing"]
+        else:
+            self.inter_slice_spacing = 5
+
     def generate_data(self, path, files=None):
         """generates data containing batch_size samples"""
         speeds = [4] * 4 + [5] * 5 + [6] * 6 + [7] * 8 + [8] * 9  # 32 samples total == batch_size
@@ -48,7 +53,7 @@ class DataFactory:
             [nb_files * nb_samples, self.est_nb_timesteps + self.pred_nb_timesteps, NB_CHANNELS])
 
         for counter, file_name in enumerate(tqdm(files)):
-            image = sitk.ReadImage(path + file_name)
+            image = sitk.ReadImage(os.path.join(path, file_name))
             for i in range(nb_samples):
                 ius_x, ius_y, ius_z, rotation_matrix_init = get_rotational_spline_generators(
                     self.est_nb_timesteps + self.pred_nb_timesteps, speed=speeds[i])
@@ -56,8 +61,8 @@ class DataFactory:
                     0] if self.mask else self.est_nb_timesteps + 1
 
                 for timestep in range(self.est_nb_timesteps + self.pred_nb_timesteps):
-                    z = np.random.randint(self.initial_slice_index+timestep*5,
-                                          (self.initial_slice_index+5)+timestep*5, 1)[0]
+                    z = np.random.randint(0, self.inter_slice_spacing, 1)[0]
+                    z += self.initial_slice_index + (timestep*self.inter_slice_spacing)
                     img, angle_offsets = generate_img_angle(timestep,
                                                             image,
                                                             ius_x, ius_y, ius_z,
@@ -120,7 +125,7 @@ class DataFactory:
         return self.generate_data(self.train_data_path, self.train_files)
 
     def generate_validation_data(self):
-        return self.generate_data(self.train_data_path, self.train_files)
+        return self.generate_data(self.train_data_path, self.validation_files)
 
     def generate_test_data(self):
-        return self.generate_data(self.test_data_path, self.test_files)
+        return self.generate_data(self.test_data_path, self.test_files[:1])
