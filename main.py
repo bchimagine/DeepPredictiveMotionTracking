@@ -80,8 +80,7 @@ def export_model_results(model, loss, config_path):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Process some integers.')
-    parser.add_argument('config', type=str, help='path to experiment config file', default=None)
-    parser.add_argument('pretrained_model_path', type=str, help='path to pretrained model HDF5 file', default=None)
+    parser.add_argument('config', type=str, help='path to experiment config file')
 
     args = parser.parse_args()
     config_path = args['config']
