@@ -142,10 +142,10 @@ class DataFactory:
         return x, y
 
     def generate_train_data(self):
-        return self.generate_data(self.train_data_path, self.train_files[:1])
+        return self.generate_data(self.train_data_path, self.train_files)
 
     def generate_validation_data(self):
-        return self.generate_data(self.train_data_path, self.validation_files[:1])
+        return self.generate_data(self.train_data_path, self.validation_files)
 
     def generate_test_data(self):
-        return self.generate_data(self.test_data_path, self.test_files[:1])
+        return self.generate_data(self.test_data_path, self.test_files)

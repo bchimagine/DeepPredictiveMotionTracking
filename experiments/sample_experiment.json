@@ -11,15 +11,15 @@
     "inter_slice_spacing": 5
   },
   "network": {
-    "type": "resnet18",
+    "type": "direct_lstm",
     "single_head": false,
     "hidden_units": 512
   },
   "training": {
     "batch_size": 32,
-    "learning_rate": [0.001],
-    "epoch_steps": 1,
-    "intra_epoch_steps": 1
+    "learning_rate": [0.001, 0.0001],
+    "epoch_steps": 30,
+    "intra_epoch_steps": 10
   },
   "evaluation": {
     "pretrained_model_path": ""
