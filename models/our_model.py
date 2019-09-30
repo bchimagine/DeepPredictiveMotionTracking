@@ -1,7 +1,7 @@
 from keras.layers import (Input,
                           Flatten,
                           Dense,
-                          CuDNNLSTM,
+                          CuDNNLSTM, LSTM,
                           Conv2D,
                           MaxPooling2D)
 from keras.layers.normalization import BatchNormalization
@@ -37,7 +37,7 @@ def build_our_model(config):
 
     x = TimeDistributed(Flatten())(x)
 
-    encoder_rnn = CuDNNLSTM(config['network']['hidden_units'], return_sequences=True, return_state=True,
+    encoder_rnn = LSTM(config['network']['hidden_units'], return_sequences=True, return_state=True,
                             name="encoder_rnn")
     encoder_outputs_states = encoder_rnn(x)
     encoder_outputs, encoder_states = encoder_outputs_states[0], encoder_outputs_states[1:]  # [state_h, state_c]
@@ -47,7 +47,7 @@ def build_our_model(config):
 
     # DECODER
     decoder_input = Input(shape=(None, NB_ANGLES + NB_SLICE), name="decoder_input")
-    decoder_rnn = CuDNNLSTM(config['network']['hidden_units'], return_sequences=True,
+    decoder_rnn = LSTM(config['network']['hidden_units'], return_sequences=True,
                             return_state=True, name="decoder_rnn")
     decoder_outputs_states = decoder_rnn(decoder_input, initial_state=encoder_states)
     decoder_outputs, decoder_states = decoder_outputs_states[0], decoder_outputs_states[1:]  # [state_h, state_c]

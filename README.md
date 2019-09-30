@@ -23,6 +23,15 @@ script
 5. If a pretrained model path is provided then only evaluation will be done by loading the pretrained model otherwise
  training from scratch will be performed.
 
+### Notes
+* We have used CUDA implementation of LSTM which needs a NVIDIA GPU to train these models however in `
+./models/our_model.py` you can switch `CuDNNLSTM` by generic `LSTM` to train on CPU. 
+* In `./experiments/sample_experiment.json` you will find `network` section where you can define what kind of network
+ you would like to train from `resnet18`, `vgg16`, `direct_lstm`, and `our_model` where in `our_model` you can 
+ specify whether to train a `single_head: true` network or `single_head: false` model as well has size of layers 
+ using `hidden_units: 512`.
+* In data section of `./experiments/sample_experiment.json` you can also set `mask: true/false` to enable training 
+models on masked/unmasked data.
 
 > To download pretrained models please visit this [gdrive link](https://drive.google.com/drive/folders/1CCKWFLDZ-BoqmThGCpapcw7jBJ_a83cR?usp=sharing) and place them in preferably `./models` directory
 

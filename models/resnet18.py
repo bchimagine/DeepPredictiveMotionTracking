@@ -17,7 +17,7 @@ from keras.models import Model
 from keras.regularizers import l2
 
 from utils.activations import pitanh
-from utils.constants import NB_SLICE, NB_ANGLES
+from utils.constants import NB_SLICE, NB_ANGLES, IMAGE_WIDTH, IMAGE_HEIGHT
 
 
 def build_resnet18_model(config):
@@ -38,7 +38,7 @@ def build_resnet18_model(config):
             At each block unit, the number of filters are doubled and the input size is halved
 
     """
-    input_shape, block_fn, repetitions = (1, 155, 135), basic_block, [2, 2, 2, 2]
+    input_shape, block_fn, repetitions = (1, IMAGE_HEIGHT, IMAGE_WIDTH), basic_block, [2, 2, 2, 2]
 
     # (1, 155, 135), 3)
     _handle_dim_ordering()
@@ -52,7 +52,7 @@ def build_resnet18_model(config):
     # Load function from str if needed.
     block_fn = _get_block(block_fn)
 
-    input = Input(shape=input_shape)
+    input = Input(shape=input_shape, name='encoder_input')
     conv1 = _conv_bn_relu(filters=64, kernel_size=(7, 7), strides=(2, 2))(input)
     pool1 = MaxPooling2D(pool_size=(3, 3), strides=(2, 2), padding="same")(conv1)
 

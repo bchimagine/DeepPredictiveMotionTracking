@@ -25,10 +25,12 @@ class DataFactory:
         self.single_head = config["network"]["single_head"]
         self.mask = config["data"]["mask"]
 
-        if config["network"]["type"] == "our_model":
+        if config["network"]["type"] == "our_model" or config["network"]["type"] == "direct_lstm":
             self.height, self.width = OUR_MODEL_IMAGE_HEIGHT, OUR_MODEL_IMAGE_WIDTH
         else:
             self.height, self.width = IMAGE_HEIGHT, IMAGE_WIDTH
+
+        self.resnet18 = True if config["network"]["type"] == "resnet18" else False
 
         if not config["data"]["initial_slice_index"]:
             self.initial_slice_index = config["data"]["initial_slice_index"]
@@ -62,7 +64,7 @@ class DataFactory:
 
                 for timestep in range(self.est_nb_timesteps + self.pred_nb_timesteps):
                     z = np.random.randint(0, self.inter_slice_spacing, 1)[0]
-                    z += self.initial_slice_index + (timestep*self.inter_slice_spacing)
+                    z += self.initial_slice_index + (timestep * self.inter_slice_spacing)
                     img, angle_offsets = generate_img_angle(timestep,
                                                             image,
                                                             ius_x, ius_y, ius_z,
@@ -81,16 +83,17 @@ class DataFactory:
 
                         imgs[nb_samples * counter + i, timestep, :, :, 0] = whitening(img)
 
-        encoder_input = np.zeros(
-            (imgs.shape[0], self.est_nb_timesteps, imgs.shape[2], imgs.shape[3], imgs.shape[4]))
-        decoder_input = np.zeros((imgs.shape[0], self.pred_nb_timesteps, NB_ANGLES + NB_SLICE))
-        encoder_estimation_offset_z = np.zeros((imgs.shape[0], self.est_nb_timesteps, 1))
-        encoder_estimation_rotation_xy = np.zeros((imgs.shape[0], self.est_nb_timesteps, 2))
-        encoder_estimation_rotation_z = np.zeros((imgs.shape[0], self.est_nb_timesteps, 1))
-        decoder_prediction_offset_z = np.zeros((imgs.shape[0], self.pred_nb_timesteps, 1))
-        decoder_prediction_rotation_xy = np.zeros((imgs.shape[0], self.pred_nb_timesteps, 2))
-        decoder_prediction_rotation_z = np.zeros((imgs.shape[0], self.pred_nb_timesteps, 1))
-        for i in range(imgs.shape[0]):
+        total_records = imgs.shape[0]
+
+        encoder_input = np.zeros((total_records, self.est_nb_timesteps, imgs.shape[2], imgs.shape[3], imgs.shape[4]))
+        decoder_input = np.zeros((total_records, self.pred_nb_timesteps, NB_ANGLES + NB_SLICE))
+        encoder_estimation_offset_z = np.zeros((total_records, self.est_nb_timesteps, 1))
+        encoder_estimation_rotation_xy = np.zeros((total_records, self.est_nb_timesteps, 2))
+        encoder_estimation_rotation_z = np.zeros((total_records, self.est_nb_timesteps, 1))
+        decoder_prediction_offset_z = np.zeros((total_records, self.pred_nb_timesteps, 1))
+        decoder_prediction_rotation_xy = np.zeros((total_records, self.pred_nb_timesteps, 2))
+        decoder_prediction_rotation_z = np.zeros((total_records, self.pred_nb_timesteps, 1))
+        for i in range(total_records):
             encoder_input[i, :self.est_nb_timesteps] = imgs[i, :self.est_nb_timesteps]
 
             encoder_estimation_rotation_xy[i] = rotational[i, :self.est_nb_timesteps, :2]
@@ -103,14 +106,31 @@ class DataFactory:
         x = {"encoder_input": encoder_input, "decoder_input": decoder_input}
 
         if self.single_head:
-            y = {"estimation_offset_z": encoder_estimation_offset_z,
-                 "estimation_rotation": np.concatenate((encoder_estimation_rotation_xy,
-                                                        encoder_estimation_rotation_z),
-                                                       axis=2),
-                 "prediction_offset_z": decoder_prediction_offset_z,
-                 "prediction_rotation": np.concatenate((decoder_prediction_rotation_xy,
-                                                        decoder_prediction_rotation_z),
-                                                       axis=2)}
+            if self.resnet18:
+                x = {"encoder_input": encoder_input.reshape((total_records * self.est_nb_timesteps, imgs.shape[2],
+                                                             imgs.shape[3], imgs.shape[4])),
+                     "decoder_input": decoder_input}
+
+                y = {"estimation_offset_z": encoder_estimation_offset_z.reshape((total_records * self.est_nb_timesteps,
+                                                                                 1)),
+                     "estimation_rotation": np.concatenate((encoder_estimation_rotation_xy,
+                                                            encoder_estimation_rotation_z),
+                                                           axis=2).reshape((total_records * self.est_nb_timesteps,
+                                                                            NB_ANGLES)),
+                     "prediction_offset_z": decoder_prediction_offset_z.reshape((total_records *
+                                                                                 self.pred_nb_timesteps, 1)),
+                     "prediction_rotation": np.concatenate((decoder_prediction_rotation_xy,
+                                                            decoder_prediction_rotation_z),
+                                                           axis=2).reshape((total_records * self.pred_nb_timesteps, 3))}
+            else:
+                y = {"estimation_offset_z": encoder_estimation_offset_z,
+                     "estimation_rotation": np.concatenate((encoder_estimation_rotation_xy,
+                                                            encoder_estimation_rotation_z),
+                                                           axis=2),
+                     "prediction_offset_z": decoder_prediction_offset_z,
+                     "prediction_rotation": np.concatenate((decoder_prediction_rotation_xy,
+                                                            decoder_prediction_rotation_z),
+                                                           axis=2)}
         else:
             y = {"estimation_offset_z": encoder_estimation_offset_z,
                  "estimation_rotation_xy": encoder_estimation_rotation_xy,
@@ -122,10 +142,10 @@ class DataFactory:
         return x, y
 
     def generate_train_data(self):
-        return self.generate_data(self.train_data_path, self.train_files)
+        return self.generate_data(self.train_data_path, self.train_files[:1])
 
     def generate_validation_data(self):
-        return self.generate_data(self.train_data_path, self.validation_files)
+        return self.generate_data(self.train_data_path, self.validation_files[:1])
 
     def generate_test_data(self):
         return self.generate_data(self.test_data_path, self.test_files[:1])

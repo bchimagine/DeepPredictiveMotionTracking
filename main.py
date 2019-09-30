@@ -1,5 +1,6 @@
 import os
 import argparse
+import logging
 import json
 from shutil import copyfile
 from datetime import datetime
@@ -75,11 +76,15 @@ def export_model_results(model, loss, config_path):
     with open(os.path.join(save_path, "results.json"), 'w') as results_file:
         json.dump(loss, results_file)
 
-    copyfile(config_path, save_path)
+    config_name = os.path.split(config_path)[-1]
+    copyfile(config_path, os.path.join(save_path, config_name))
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='Process some integers.')
+    logger = logging.getLogger('deep_pmt')
+    logger.setLevel(logging.INFO)
+
+    parser = argparse.ArgumentParser(description='Process configuration json')
     parser.add_argument('config', type=str, help='path to experiment config file')
 
     args = parser.parse_args()
@@ -89,6 +94,7 @@ if __name__ == '__main__':
         config = json.load(f)
 
     model = get_model(config)
+    logger.info("Model successfully built and loaded")
 
     # To handle case for evaluation, in case user forgot to specify type of model
     if len(model.output_names) > 4:
