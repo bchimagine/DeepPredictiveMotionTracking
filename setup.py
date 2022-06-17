@@ -22,6 +22,6 @@ setup(
                 'Imaging (https://arxiv.org/abs/1909.11625) ',
     long_description=read('README'),
     install_requires=['cv2', 'SimpleITK==1.2.2', 'tqdm==4.23.1',
-                      'numpy==1.6.2', 'keras==2.2.0', 'scipy==1.3.0',
+                      'numpy==1.21.0', 'keras==2.2.0', 'scipy==1.3.0',
                       'nibabel==2.5.1', 'nilearn==0.5.1']
 )
